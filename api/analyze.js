@@ -180,19 +180,30 @@ Return ONLY valid JSON, no markdown, no explanation:
 }`;
 
     // Call Gemini Flash
-    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, topP: 0.8, maxOutputTokens: 3000, responseMimeType: 'application/json' }
+        generationConfig: { temperature: 0.2, topP: 0.8, maxOutputTokens: 4000, responseMimeType: 'application/json' }
       })
     });
 
     const geminiData = await geminiRes.json();
-    const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    console.log('Gemini status:', geminiRes.status);
+    console.log('Gemini response:', JSON.stringify(geminiData).slice(0, 500));
+
+    const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
     let aiResult;
-    try { aiResult = JSON.parse(rawText); } catch { aiResult = { parse_error: true, raw: rawText.slice(0, 500) }; }
+    if (!rawText) {
+      console.error('Gemini returned empty response:', JSON.stringify(geminiData));
+      aiResult = { parse_error: true, gemini_error: geminiData.error || 'No content returned' };
+    } else {
+      try { aiResult = JSON.parse(rawText); } catch(e) {
+        console.error('JSON parse error:', e.message, 'Raw:', rawText.slice(0, 200));
+        aiResult = { parse_error: true, raw: rawText.slice(0, 500) };
+      }
+    }
 
     return res.status(200).json({
       success: true,
