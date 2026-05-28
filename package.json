@@ -1,0 +1,6 @@
+{
+  "name": "brandsync-hotel-tool",
+  "version": "1.0.0",
+  "description": "BrandSync Hotel Brand Recommender — Vercel Serverless Backend",
+  "engines": { "node": ">=18" }
+}
